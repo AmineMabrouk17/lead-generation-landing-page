@@ -142,6 +142,8 @@
   .form-section {
     padding: var(--space-lg) 0;
     background: var(--color-bg);
+    content-visibility: auto;
+    contain-intrinsic-size: 500px;
   }
 
   .form-card {
@@ -153,6 +155,7 @@
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
     text-align: center;
+    min-height: 280px;
   }
 
   .form-title {
@@ -239,6 +242,7 @@
     border-radius: var(--radius);
     font-size: 0.9rem;
     font-weight: 500;
+    min-height: 3rem;
   }
 
   .form-feedback--success {
