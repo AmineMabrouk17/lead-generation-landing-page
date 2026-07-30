@@ -39,93 +39,100 @@
 </section>
 
 <script>
-  const form = document.getElementById('lead-form');
-  const emailInput = document.getElementById('email');
-  const errorEl = document.getElementById('form-error');
-  const feedbackEl = document.getElementById('form-feedback');
-  const submitBtn = document.getElementById('form-submit-btn');
-  const btnText = document.getElementById('btn-text');
-  const btnLoading = document.getElementById('btn-loading');
+  const form = document.getElementById('lead-form') as HTMLFormElement | null;
+  const emailInput = document.getElementById('email') as HTMLInputElement | null;
+  const errorEl = document.getElementById('form-error') as HTMLSpanElement | null;
+  const feedbackEl = document.getElementById('form-feedback') as HTMLDivElement | null;
+  const submitBtn = document.getElementById('form-submit-btn') as HTMLButtonElement | null;
+  const btnText = document.getElementById('btn-text') as HTMLSpanElement | null;
+  const btnLoading = document.getElementById('btn-loading') as HTMLSpanElement | null;
 
-  function setLoading(isLoading) {
+  function setLoading(isLoading: boolean) {
+    if (!submitBtn || !btnText || !btnLoading) return;
     submitBtn.disabled = isLoading;
     btnText.hidden = isLoading;
     btnLoading.hidden = !isLoading;
   }
 
-  function setError(message) {
+  function setError(message: string) {
+    if (!errorEl || !emailInput) return;
     errorEl.textContent = message;
     emailInput.setAttribute('aria-invalid', 'true');
   }
 
   function clearError() {
+    if (!errorEl || !emailInput) return;
     errorEl.textContent = '';
     emailInput.removeAttribute('aria-invalid');
   }
 
-  function showFeedback(type, message) {
+  function showFeedback(type: 'success' | 'error', message: string) {
+    if (!feedbackEl) return;
     feedbackEl.textContent = message;
     feedbackEl.className = `form-feedback form-feedback--${type}`;
     feedbackEl.hidden = false;
   }
 
   function hideFeedback() {
+    if (!feedbackEl) return;
     feedbackEl.hidden = true;
     feedbackEl.textContent = '';
   }
 
-  emailInput.addEventListener('input', clearError);
+  if (emailInput) {
+    emailInput.addEventListener('input', clearError);
+  }
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    clearError();
-    hideFeedback();
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearError();
+      hideFeedback();
 
-    const email = emailInput.value.trim();
+      if (!emailInput) return;
+      const email = emailInput.value.trim();
 
-    if (!email) {
-      setError('Email is required.');
-      emailInput.focus();
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address.');
-      emailInput.focus();
-      return;
-    }
-
-    setLoading(true);
-
-    window.pushDataLayer?.('form_submit', {
-      form_id: 'hero_lead_form'
-    });
-
-    try {
-      const response = await fetch('/api/lead', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-
-      if (!response.ok) {
-        throw new Error('Submission failed');
+      if (!email) {
+        setError('Email is required.');
+        emailInput.focus();
+        return;
       }
 
-      window.pushDataLayer?.('lead', {
-        form_id: 'hero_lead_form',
-        status: 'success'
-      });
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        setError('Please enter a valid email address.');
+        emailInput.focus();
+        return;
+      }
 
-      showFeedback('success', 'Thank you! We will be in touch.');
-      form.reset();
-    } catch (err) {
-      showFeedback('error', 'Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  });
+      setLoading(true);
+      window.pushDataLayer?.('form_submit', { form_id: 'hero_lead_form' });
+
+      try {
+        const response = await fetch('/api/lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+
+        if (!response.ok) {
+          throw new Error('Submission failed');
+        }
+
+        window.pushDataLayer?.('lead', {
+          form_id: 'hero_lead_form',
+          status: 'success'
+        });
+
+        showFeedback('success', 'Thank you! We will be in touch.');
+        form.reset();
+      } catch {
+        showFeedback('error', 'Something went wrong. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    });
+  }
 </script>
 
 <style is:global>

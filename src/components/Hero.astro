@@ -19,12 +19,15 @@
 </section>
 
 <script>
-  document.querySelectorAll('.cta-btn').forEach(button => {
+  document.querySelectorAll<HTMLButtonElement>('.cta-btn').forEach(button => {
     button.addEventListener('click', (e) => {
-      const ctaId = e.currentTarget.getAttribute('data-cta-id') || 'unlabeled_cta';
-      window.pushDataLayer?.('button_click', {
+      const target = e.currentTarget;
+      if (!target) return;
+      const el = target as HTMLButtonElement;
+      const ctaId = el.getAttribute('data-cta-id') || 'unlabeled_cta';
+      window.pushDataLayer('button_click', {
         cta_id: ctaId,
-        click_text: e.currentTarget.innerText.trim()
+        click_text: el.innerText.trim()
       });
     });
   });
