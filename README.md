@@ -129,6 +129,24 @@ import heroImg from '../assets/hero.png';
 <Image src={heroImg} alt="" width="800" height="600" format="avif" />
 ```
 
+## Deployment
+
+The easiest way to deploy is **Cloudflare Pages** (free, global CDN, zero config):
+
+1. Push this repo to GitHub.
+2. Go to [dash.cloudflare.com](https://dash.cloudflare.com) → **Pages** → **Create a project** → **Connect to Git**.
+3. Select your repo, set **Build command** to `pnpm build`, **Build output** to `dist`.
+4. Click **Save and Deploy**.
+
+No adapter or CLI needed — Astro's static output (`./dist/`) works natively with Cloudflare Pages, Netlify, and Vercel.
+
+For CLI deployment (requires [Wrangler](https://developers.cloudflare.com/workers/wrangler/)):
+
+```sh
+pnpm build
+npx wrangler pages deploy dist
+```
+
 ## Performance Tuning (CLS)
 
 If Lighthouse shows CLS (Cumulative Layout Shift) above 0.1:
