@@ -11,7 +11,7 @@
         A high-performance landing page built for speed, conversions, and precise
         analytics tracking. No bloat. No compromise.
       </p>
-      <button class="cta-btn" data-cta-id="hero_get_started">
+      <button type="button" class="cta-btn" data-cta-id="hero_get_started">
         Get Started
       </button>
     </div>
@@ -29,6 +29,10 @@
         cta_id: ctaId,
         click_text: el.innerText.trim()
       });
+      const formSection = document.getElementById('lead-form-section');
+      if (formSection) {
+        formSection.scrollIntoView({ behavior: 'smooth' });
+      }
     });
   });
 </script>
