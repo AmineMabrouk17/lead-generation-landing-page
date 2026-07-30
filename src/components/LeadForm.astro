@@ -1,0 +1,245 @@
+---
+---
+
+<section class="form-section" id="lead-form-section">
+  <div class="container">
+    <div class="form-card">
+      <h2 class="form-title">Get Early Access</h2>
+      <p class="form-description">
+        Enter your email below and we'll keep you updated.
+      </p>
+      <form id="lead-form" class="lead-form" novalidate>
+        <div class="form-group">
+          <label for="email" class="sr-only">Email address</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            class="form-input"
+            placeholder="you@example.com"
+            required
+            autocomplete="email"
+          />
+          <span class="form-error" id="form-error" aria-live="polite"></span>
+        </div>
+        <button type="submit" class="form-submit" id="form-submit-btn">
+          <span id="btn-text">Submit</span>
+          <span id="btn-loading" class="btn-loading" hidden>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-linecap="round">
+                <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite" />
+              </circle>
+            </svg>
+          </span>
+        </button>
+      </form>
+      <div class="form-feedback" id="form-feedback" hidden aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const form = document.getElementById('lead-form');
+  const emailInput = document.getElementById('email');
+  const errorEl = document.getElementById('form-error');
+  const feedbackEl = document.getElementById('form-feedback');
+  const submitBtn = document.getElementById('form-submit-btn');
+  const btnText = document.getElementById('btn-text');
+  const btnLoading = document.getElementById('btn-loading');
+
+  function setLoading(isLoading) {
+    submitBtn.disabled = isLoading;
+    btnText.hidden = isLoading;
+    btnLoading.hidden = !isLoading;
+  }
+
+  function setError(message) {
+    errorEl.textContent = message;
+    emailInput.setAttribute('aria-invalid', 'true');
+  }
+
+  function clearError() {
+    errorEl.textContent = '';
+    emailInput.removeAttribute('aria-invalid');
+  }
+
+  function showFeedback(type, message) {
+    feedbackEl.textContent = message;
+    feedbackEl.className = `form-feedback form-feedback--${type}`;
+    feedbackEl.hidden = false;
+  }
+
+  function hideFeedback() {
+    feedbackEl.hidden = true;
+    feedbackEl.textContent = '';
+  }
+
+  emailInput.addEventListener('input', clearError);
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearError();
+    hideFeedback();
+
+    const email = emailInput.value.trim();
+
+    if (!email) {
+      setError('Email is required.');
+      emailInput.focus();
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address.');
+      emailInput.focus();
+      return;
+    }
+
+    setLoading(true);
+
+    window.pushDataLayer?.('form_submit', {
+      form_id: 'hero_lead_form'
+    });
+
+    try {
+      const response = await fetch('/api/lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      if (!response.ok) {
+        throw new Error('Submission failed');
+      }
+
+      window.pushDataLayer?.('lead', {
+        form_id: 'hero_lead_form',
+        status: 'success'
+      });
+
+      showFeedback('success', 'Thank you! We will be in touch.');
+      form.reset();
+    } catch (err) {
+      showFeedback('error', 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  });
+</script>
+
+<style is:global>
+  .form-section {
+    padding: var(--space-lg) 0;
+    background: var(--color-bg);
+  }
+
+  .form-card {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: var(--space-md);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    text-align: center;
+  }
+
+  .form-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: var(--space-xs);
+  }
+
+  .form-description {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-sm);
+  }
+
+  .lead-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .form-group {
+    text-align: left;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    transition: border-color 0.2s;
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  }
+
+  .form-input[aria-invalid="true"] {
+    border-color: var(--color-error);
+  }
+
+  .form-error {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--color-error);
+    min-height: 1.25rem;
+  }
+
+  .form-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.875rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--color-primary);
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .form-submit:hover:not(:disabled) {
+    background: var(--color-primary-dark);
+  }
+
+  .form-submit:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  .btn-loading {
+    display: inline-flex;
+  }
+
+  .form-feedback {
+    margin-top: var(--space-sm);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .form-feedback--success {
+    background: #f0fdf4;
+    color: var(--color-success);
+    border: 1px solid #bbf7d0;
+  }
+
+  .form-feedback--error {
+    background: #fef2f2;
+    color: var(--color-error);
+    border: 1px solid #fecaca;
+  }
+</style>
