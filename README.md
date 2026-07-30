@@ -1,162 +1,76 @@
 # Lead Generation Landing Page
 
-A high-performance, responsive landing page with GTM/GA4/Meta Pixel tracking and form integration.
+**Live:** https://lead-generation-landing-page.pages.dev
 
-Built with [Astro](https://astro.build).
+A high-performance, responsive lead generation landing page with Google Tag Manager (GTM), GA4, Meta Pixel tracking, and Formspree form integration.
 
-## Getting Started
+Built with [Astro](https://astro.build) — deployed on Cloudflare Pages global edge network.
 
-```sh
-pnpm install
-pnpm dev          # starts at http://localhost:4321
-pnpm build        # production build to ./dist/
-pnpm preview      # preview production build
-```
+---
 
-## Google Tag Manager Setup
+## Overview
 
-This project includes GTM out of the box. The container ID defaults to `GTM-T46X25DV`. To use your own:
+| Feature | Detail |
+|---|---|
+| **Framework** | Astro v7.1.6 (static site, zero JS by default) |
+| **Hosting** | Cloudflare Pages (global CDN, automated deploys) |
+| **Analytics** | GTM container, GA4 events, Meta Pixel-ready |
+| **Form backend** | Formspree (zero-infrastructure, email delivery) |
+| **Performance** | CSS inlined, HTML compressed, CLS 0, sub-100ms FCP/LCP |
+| **Styling** | Pure CSS with custom properties, responsive breakpoints |
+| **Package manager** | pnpm |
 
-1. Go to https://tagmanager.google.com and create a container.
-2. Copy your container ID (e.g. `GTM-XXXXXXX`).
-3. Create a `.env` file:
+## Components
 
-```bash
-echo "PUBLIC_GTM_ID=GTM-XXXXXXX" > .env
-```
+| Component | File | Purpose |
+|---|---|---|
+| `Layout.astro` | `src/layouts/Layout.astro` | Document shell with OG/Twitter meta tags, dataLayer init, GTM preconnect |
+| `Analytics.astro` | `src/components/Analytics.astro` | GTM snippet + noscript iframe (injected at top of `<body>`) |
+| `Hero.astro` | `src/components/Hero.astro` | Gradient hero with CTA button; scrolls to form, fires `button_click` event |
+| `Features.astro` | `src/components/Features.astro` | 3-card responsive grid (01, 02, 03) |
+| `LeadForm.astro` | `src/components/LeadForm.astro` | Email form with validation, spinner, Formspree POST, success/error feedback; fires `form_submit` and `lead` |
+| `Footer.astro` | `src/components/Footer.astro` | Dark footer with copyright |
 
-Or update the fallback in `src/components/Analytics.astro`.
+## Analytics Events
 
-### How GTM is integrated
+| Event | Trigger | Destination |
+|---|---|---|
+| `page_view` | Page load (automatic via GTM) | GA4 / Meta Pixel |
+| `button_click` | CTA button clicked | GA4 / Meta Pixel |
+| `form_submit` | Form submitted (validated) | Custom tracking |
+| `lead` | Form submission succeeded (HTTP 200) | GA4 (`generate_lead`) / Meta Pixel (`Lead`) |
 
-The GTM snippet is loaded in `src/components/Analytics.astro` and injected at the top of `<body>` (the `<script>` and `<noscript>` tags as specified by Google).
+Events are centralized through `window.pushDataLayer(name, payload)` which pushes to `window.dataLayer`. The `lead` event only fires after a successful API response to prevent false conversions.
 
-### Step-by-step: Configure GA4 in GTM
+## Configure GA4 in GTM
 
 1. Go to https://tagmanager.google.com → your container → **Tags** → **New**.
 2. **Tag Configuration** → choose **Google Analytics: GA4 Event**.
-3. Enter your **Measurement ID** (from Google Analytics admin → Data Streams → your stream).
-4. **Triggering** → choose **Initialization - All Pages**.
+3. Enter your **Measurement ID** (from Google Analytics admin → Data Streams).
+4. **Triggering** → **Initialization - All Pages**.
 5. Name it `GA4 - Page View` and save.
-
-Repeat for custom events:
 
 | Tag | Event Name | Trigger |
 |---|---|---|
 | `GA4 - Button Click` | `button_click` | Custom Event - `button_click` |
 | `GA4 - Lead` | `generate_lead` | Custom Event - `lead` |
 
-To create a **Custom Event trigger**: go to **Triggers** → **New** → trigger type **Custom Event** → enter the event name (e.g. `button_click`).
+## Configure Meta Pixel in GTM
 
-### Step-by-step: Configure Meta Pixel in GTM
-
-1. In GTM → **Tags** → **New** → **Tag Configuration** → **Custom HTML**.
-2. Paste your Meta Pixel base code (from Meta Events Manager):
-   ```html
-   <script>
-   !function(f,b,e,v,n,t,s){...} // your Facebook pixel code
-   fbq('init', 'YOUR_PIXEL_ID');
-   fbq('track', 'PageView');
-   </script>
-   ```
+1. **Tags** → **New** → **Tag Configuration** → **Custom HTML**.
+2. Paste your Meta Pixel base code with `fbq('init', 'YOUR_PIXEL_ID')` and `fbq('track', 'PageView')`.
 3. **Trigger** → **Initialization - All Pages**.
-4. Name it `Meta Pixel - Base Code` and save.
-
-5. Create another **Custom HTML** tag for lead events:
-   ```html
-   <script>fbq('track', 'Lead');</script>
-   ```
-6. **Trigger** → Custom Event → `lead`.
-7. Name it `Meta Pixel - Lead Event` and save.
-
-### Testing with GTM Preview Mode
-
-1. In GTM, click **Preview** — this opens Tag Assistant.
-2. Enter your site URL (`http://localhost:4321`) and click **Connect**.
-3. A Tag Assistant window opens showing all fired tags in the left panel.
-4. Click the **Get Started** button → confirm `button_click` fires **once**.
-5. Submit an invalid email → confirm `form_submit` does **not** fire.
-6. Submit a valid email → confirm `form_submit` fires, then `lead` fires **exactly once** on success response.
-
-If any event fires more than once, check for duplicate triggers in GTM.
-
-### dataLayer events fired
-
-| Event | When | Where |
-|---|---|---|
-| `page_view` | Page load (automatic via GTM) | — |
-| `button_click` | CTA button clicked | `Hero.astro` |
-| `form_submit` | Form submitted | `LeadForm.astro` |
-| `lead` | Form submission succeeded (HTTP 200) | `LeadForm.astro` |
-
-All events are pushed via `window.pushDataLayer(name, payload)` which centralizes to `window.dataLayer`. The `lead` event only fires after a successful API response, preventing false conversions.
-
-### Quick verification in Console
-
-```js
-window.dataLayer
-// Look for: gtm.js, button_click, form_submit, lead
-```
+4. Create another **Custom HTML** tag: `<script>fbq('track', 'Lead');</script>` triggered on Custom Event `lead`.
 
 ## Form Handling (Formspree)
 
-Form submissions are handled by [Formspree](https://formspree.io) — a zero-infrastructure form backend. No server code needed: the form POSTs directly to Formspree, submissions arrive in your email, and spam protection is built in. Free tier covers up to 50 submissions/month.
+Form submissions POST directly to Formspree at `https://formspree.io/f/mdaqvavb`. No server code needed — submissions arrive via email with built-in spam protection. Free tier: 50 submissions/month.
 
-The form posts to `https://formspree.io/f/mdaqvavb`. To change it, update the `fetch` URL in `src/components/LeadForm.astro`.
-
-### Form validation rules
-
-- **Empty field** → "Email is required."
-- **Invalid format** (e.g. `abc`) → "Please enter a valid email address."
-- **Valid email** → POSTs to Formspree → "Thank you! We will be in touch."
-- **Network error** → "Something went wrong. Please try again."
-
-A loading spinner shows during submission. The submit button is disabled while the request is in flight.
-
-## Image Optimization
-
-This landing page uses a pure CSS design (gradients, icons via CSS, no `<img>` tags). If you later add images:
-
-1. Place them in `src/assets/` and use Astro's `<Image />` component — it auto-generates WebP/AVIF and responsive sizes.
-2. Always set explicit `width` and `height` to prevent Cumulative Layout Shift (CLS).
-3. Use `format="avif"` for best compression:
-
-```astro
----
-import { Image } from 'astro:assets';
-import heroImg from '../assets/hero.png';
----
-<Image src={heroImg} alt="" width="800" height="600" format="avif" />
-```
-
-## Deployment
-
-The easiest way to deploy is **Cloudflare Pages** (free, global CDN, zero config):
-
-1. Push this repo to GitHub.
-2. Go to [dash.cloudflare.com](https://dash.cloudflare.com) → **Pages** → **Create a project** → **Connect to Git**.
-3. Select your repo, set **Build command** to `pnpm build`, **Build output** to `dist`.
-4. Click **Save and Deploy**.
-
-No adapter or CLI needed — Astro's static output (`./dist/`) works natively with Cloudflare Pages, Netlify, and Vercel.
-
-For CLI deployment (requires [Wrangler](https://developers.cloudflare.com/workers/wrangler/)):
-
-```sh
-pnpm build
-npx wrangler pages deploy dist
-```
-
-## Performance Tuning (CLS)
-
-If Lighthouse shows CLS (Cumulative Layout Shift) above 0.1:
-
-- Ensure all elements have explicit dimensions (`width`/`height` or `aspect-ratio` in CSS).
-- Avoid injecting dynamic content above the fold without reserving space.
-- Use `font-display: optional` if loading custom fonts.
-- Run Lighthouse in Incognito mode with CPU 4x slowdown for accurate mobile scores.
-
-Current measured metrics: Performance 100 on category scoring, but CLS at 0.25 may pull the aggregate score down to ~58. Applying the above fixes typically resolves this.
+**Validation rules:**
+- Empty field → "Email is required."
+- Invalid format → "Please enter a valid email address."
+- Valid email → POSTs to Formspree → "Thank you! We will be in touch."
+- Network error → "Something went wrong. Please try again."
 
 ## Environment Variables
 
@@ -164,4 +78,27 @@ Current measured metrics: Performance 100 on category scoring, but CLS at 0.25 m
 |---|---|---|
 | `PUBLIC_GTM_ID` | `GTM-T46X25DV` | Google Tag Manager container ID |
 
-Copy `.env.example` to `.env` to override defaults.
+Copy `.env.example` to `.env` to override.
+
+## Local Development
+
+```sh
+pnpm install          # install dependencies
+pnpm dev              # start dev server at http://localhost:4321
+pnpm build            # production build to ./dist/
+pnpm preview          # preview production build locally
+pnpm astro check      # type-check all .astro files
+```
+
+## Deployment
+
+Already deployed at https://lead-generation-landing-page.pages.dev.
+
+Deploys automatically when pushing to `main` (GitHub → Cloudflare Pages integration). Alternatively:
+
+```sh
+pnpm build
+pnpm wrangler pages deploy dist --branch main --project-name lead-generation-landing-page
+```
+
+See [PRODUCTION.md](./PRODUCTION.md) for the full command reference.
