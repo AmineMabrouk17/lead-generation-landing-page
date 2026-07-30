@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import Analytics from '../components/Analytics.astro';
 
 export interface Props {
   title?: string;
@@ -19,8 +20,18 @@ const { title = 'Lead Generation Landing Page', description = 'High-performance 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" />
     <title>{title}</title>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      window.pushDataLayer = function(eventName, payload = {}) {
+        window.dataLayer.push({
+          event: eventName,
+          ...payload
+        });
+      };
+    </script>
   </head>
   <body>
+    <Analytics />
     <slot />
   </body>
 </html>
