@@ -8,6 +8,7 @@ export interface Props {
 }
 
 const { title = 'Lead Generation Landing Page', description = 'High-performance landing page' } = Astro.props;
+const gtmId = import.meta.env.PUBLIC_GTM_ID || 'GTM-XXXXXXX';
 ---
 
 <!DOCTYPE html>
@@ -20,6 +21,7 @@ const { title = 'Lead Generation Landing Page', description = 'High-performance 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" />
     <title>{title}</title>
+    <link rel="preconnect" href="https://www.googletagmanager.com" />
     <script is:inline>
       window.dataLayer = window.dataLayer || [];
       window.pushDataLayer = function(eventName, payload = {}) {
