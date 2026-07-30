@@ -1,0 +1,22 @@
+---
+const year = new Date().getFullYear();
+---
+
+<footer class="footer">
+  <div class="container">
+    <p class="footer-text">&copy; {year} Lead Generation. All rights reserved.</p>
+  </div>
+</footer>
+
+<style is:global>
+  .footer {
+    padding: var(--space-md) 0;
+    background: var(--color-text);
+    color: #94a3b8;
+    text-align: center;
+  }
+
+  .footer-text {
+    font-size: 0.875rem;
+  }
+</style>
